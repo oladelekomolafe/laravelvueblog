@@ -1,0 +1,69 @@
+version: '3.8'
+services: 
+
+    db:
+        image: mariadb:latest
+        container_name: db
+        ports:
+            - 3309:3306
+        environment:
+            MYSQL_DATABASE: laravelvueblog_db
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_PASSWORD: root
+            MYSQL_USER: admin
+            MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+            
+        volumes:
+            - ./mysql_file:/docker-entrypoint-initdb.d
+            #- mysql_file:/docker-entrypoint-initdb.d
+            # - mysql_file:/var/lib/mysql
+        networks:
+            - appnetwork
+    main:
+        build: 
+            context: .
+            dockerfile: Dockerfile
+        # command: 'php artisan serve --host=0.0.0.0'
+        volumes:
+            - .:/app
+        ports:
+            - 8008:8000
+        environment:
+            # MYSQL_DATABASE: laravelvueblog_db
+            # MYSQL_ROOT_PASSWORD: root
+            # MYSQL_PASSWORD: root
+            # MYSQL_USER: admin
+            DB_HOST: db
+            DB_USER: root
+            DB_PASSWORD: root
+            DB_NAME: laravelvueblog_db
+            WAIT_HOSTS: db:3306
+
+        depends_on:
+            - db
+        links:
+            - db
+        networks:
+            - appnetwork
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        ports:
+            - 3310:80
+        # links:
+        #     - mysql
+        environment:
+            PMA_HOSTS: db
+            PMA_PORT: 3306
+        depends_on:
+            - db
+        networks:
+            - appnetwork
+#Volumes
+# volumes:
+#     mysql_file:
+#         driver: local
+#Docker Networks
+networks:
+  appnetwork:
+    driver: bridge
